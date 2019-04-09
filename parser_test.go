@@ -4,7 +4,6 @@ import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
-	"github.com/yacen/alg/test"
 	"reflect"
 	"testing"
 	"time"
@@ -21,7 +20,7 @@ var (
 )
 
 func init() {
-	jwtTestDefaultKey = test.LoadRSAPublicKeyFromDisk("test/sample_key.pub")
+	jwtTestDefaultKey = LoadRSAPublicKeyFromDisk("test/sample_key.pub")
 }
 
 var jwtTestData = []struct {
@@ -182,13 +181,13 @@ var jwtTestData = []struct {
 }
 
 func TestParser_Parse(t *testing.T) {
-	privateKey := test.LoadRSAPrivateKeyFromDisk("test/sample_key")
+	privateKey := LoadRSAPrivateKeyFromDisk("test/sample_key")
 
 	// Iterate over test data set and run tests
 	for _, data := range jwtTestData {
 		// If the token string is blank, use helper function to generate string
 		if data.tokenString == "" {
-			data.tokenString = test.MakeSampleToken(data.claims, privateKey)
+			data.tokenString = MakeSampleToken(data.claims, privateKey)
 		}
 
 		// Parse the token
@@ -246,13 +245,13 @@ func TestParser_Parse(t *testing.T) {
 }
 
 func TestParser_ParseUnverified(t *testing.T) {
-	privateKey := test.LoadRSAPrivateKeyFromDisk("test/sample_key")
+	privateKey := LoadRSAPrivateKeyFromDisk("test/sample_key")
 
 	// Iterate over test data set and run tests
 	for _, data := range jwtTestData {
 		// If the token string is blank, use helper function to generate string
 		if data.tokenString == "" {
-			data.tokenString = test.MakeSampleToken(data.claims, privateKey)
+			data.tokenString = MakeSampleToken(data.claims, privateKey)
 		}
 
 		// Parse the token

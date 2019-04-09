@@ -7,8 +7,6 @@ import (
 	"bytes"
 	"crypto/rsa"
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
-	"github.com/dgrijalva/jwt-go/request"
 	"io"
 	"io/ioutil"
 	"log"
@@ -41,17 +39,16 @@ func init() {
 	signBytes, err := ioutil.ReadFile(privKeyPath)
 	fatal(err)
 
-	signKey, err = jwt.ParseRSAPrivateKeyFromPEM(signBytes)
+	signKey, err = ParseRSAPrivateKeyFromPEM(signBytes)
 	fatal(err)
 
 	verifyBytes, err := ioutil.ReadFile(pubKeyPath)
 	fatal(err)
 
-	verifyKey, err = jwt.ParseRSAPublicKeyFromPEM(verifyBytes)
+	verifyKey, err = ParseRSAPublicKeyFromPEM(verifyBytes)
 	fatal(err)
 
 	http.HandleFunc("/authenticate", authHandler)
-	http.HandleFunc("/restricted", restrictedHandler)
 
 	// Setup listener
 	listener, err := net.ListenTCP("tcp", &net.TCPAddr{})
@@ -78,7 +75,7 @@ type CustomerInfo struct {
 }
 
 type CustomClaimsExample struct {
-	*jwt.StandardClaims
+	*StandardClaims
 	TokenType string
 	CustomerInfo
 }
@@ -104,7 +101,7 @@ func Example_getTokenViaHTTP() {
 	tokenString := strings.TrimSpace(buf.String())
 
 	// Parse the token
-	token, err := jwt.ParseWithClaims(tokenString, &CustomClaimsExample{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := ParseWithClaims(tokenString, &CustomClaimsExample{}, func(token *Token) (interface{}, error) {
 		// since we only use the one private key to sign the tokens,
 		// we also only use its public counter part to verify
 		return verifyKey, nil
@@ -143,11 +140,11 @@ func Example_useTokenViaHTTP() {
 
 func createToken(user string) (string, error) {
 	// create a signer for rsa 256
-	t := jwt.New(jwt.GetSigningMethod("RS256"))
+	t := New(GetSigningMethod("RS256"))
 
 	// set our claims
 	t.Claims = &CustomClaimsExample{
-		&jwt.StandardClaims{
+		&StandardClaims{
 			// set the expire time
 			// see http://tools.ietf.org/html/draft-ietf-oauth-json-web-token-20#section-4.1.4
 			ExpiresAt: time.Now().Add(time.Minute * 1).Unix(),
@@ -192,25 +189,4 @@ func authHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/jwt")
 	w.WriteHeader(http.StatusOK)
 	fmt.Fprintln(w, tokenString)
-}
-
-// only accessible with a valid token
-func restrictedHandler(w http.ResponseWriter, r *http.Request) {
-	// Get token from request
-	token, err := request.ParseFromRequestWithClaims(r, request.OAuth2Extractor, &CustomClaimsExample{}, func(token *jwt.Token) (interface{}, error) {
-		// since we only use the one private key to sign the tokens,
-		// we also only use its public counter part to verify
-		return verifyKey, nil
-	})
-
-	// If the token is missing or invalid, return error
-	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		fmt.Fprintln(w, "Invalid token:", err)
-		return
-	}
-
-	// Token is valid
-	fmt.Fprintln(w, "Welcome,", token.Claims.(*CustomClaimsExample).Name)
-	return
 }

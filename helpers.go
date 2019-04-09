@@ -1,8 +1,7 @@
-package test
+package alg
 
 import (
 	"crypto/rsa"
-	"github.com/yacen/alg"
 	"io/ioutil"
 )
 
@@ -11,7 +10,7 @@ func LoadRSAPrivateKeyFromDisk(location string) *rsa.PrivateKey {
 	if e != nil {
 		panic(e.Error())
 	}
-	key, e := jwt.ParseRSAPrivateKeyFromPEM(keyData)
+	key, e := ParseRSAPrivateKeyFromPEM(keyData)
 	if e != nil {
 		panic(e.Error())
 	}
@@ -23,15 +22,15 @@ func LoadRSAPublicKeyFromDisk(location string) *rsa.PublicKey {
 	if e != nil {
 		panic(e.Error())
 	}
-	key, e := jwt.ParseRSAPublicKeyFromPEM(keyData)
+	key, e := ParseRSAPublicKeyFromPEM(keyData)
 	if e != nil {
 		panic(e.Error())
 	}
 	return key
 }
 
-func MakeSampleToken(c jwt.Claims, key interface{}) string {
-	token := jwt.NewWithClaims(jwt.SigningMethodRS256, c)
+func MakeSampleToken(c Claims, key interface{}) string {
+	token := NewWithClaims(SigningMethodRS256, c)
 	s, e := token.SignedString(key)
 
 	if e != nil {

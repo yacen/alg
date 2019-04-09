@@ -1,7 +1,6 @@
 package alg
 
 import (
-	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"strings"
 	"testing"
@@ -51,7 +50,7 @@ func TestHMACVerify(t *testing.T) {
 	for _, data := range hmacTestData {
 		parts := strings.Split(data.tokenString, ".")
 
-		method := jwt.GetSigningMethod(data.alg)
+		method := GetSigningMethod(data.alg)
 		err := method.Verify(strings.Join(parts[0:2], "."), parts[2], hmacTestKey)
 		if data.valid && err != nil {
 			t.Errorf("[%v] Error while verifying key: %v", data.name, err)
@@ -66,7 +65,7 @@ func TestHMACSign(t *testing.T) {
 	for _, data := range hmacTestData {
 		if data.valid {
 			parts := strings.Split(data.tokenString, ".")
-			method := jwt.GetSigningMethod(data.alg)
+			method := GetSigningMethod(data.alg)
 			sig, err := method.Sign(strings.Join(parts[0:2], "."), hmacTestKey)
 			if err != nil {
 				t.Errorf("[%v] Error signing token: %v", data.name, err)
@@ -79,13 +78,13 @@ func TestHMACSign(t *testing.T) {
 }
 
 func BenchmarkHS256Signing(b *testing.B) {
-	benchmarkSigning(b, jwt.SigningMethodHS256, hmacTestKey)
+	benchmarkSigning(b, SigningMethodHS256, hmacTestKey)
 }
 
 func BenchmarkHS384Signing(b *testing.B) {
-	benchmarkSigning(b, jwt.SigningMethodHS384, hmacTestKey)
+	benchmarkSigning(b, SigningMethodHS384, hmacTestKey)
 }
 
 func BenchmarkHS512Signing(b *testing.B) {
-	benchmarkSigning(b, jwt.SigningMethodHS512, hmacTestKey)
+	benchmarkSigning(b, SigningMethodHS512, hmacTestKey)
 }
