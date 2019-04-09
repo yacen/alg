@@ -1,14 +1,12 @@
 // +build go1.4
 
-package alg_test
+package alg
 
 import (
 	"crypto/rsa"
 	"io/ioutil"
 	"strings"
 	"testing"
-
-	"github.com/yacen/alg"
 )
 
 var rsaPSSTestData = []struct {
@@ -53,14 +51,14 @@ func TestRSAPSSVerify(t *testing.T) {
 
 	key, _ := ioutil.ReadFile("test/sample_key.pub")
 	var rsaPSSKey *rsa.PublicKey
-	if rsaPSSKey, err = jwt.ParseRSAPublicKeyFromPEM(key); err != nil {
+	if rsaPSSKey, err = ParseRSAPublicKeyFromPEM(key); err != nil {
 		t.Errorf("Unable to parse RSA public key: %v", err)
 	}
 
 	for _, data := range rsaPSSTestData {
 		parts := strings.Split(data.tokenString, ".")
 
-		method := jwt.GetSigningMethod(data.alg)
+		method := GetSigningMethod(data.alg)
 		err := method.Verify(strings.Join(parts[0:2], "."), parts[2], rsaPSSKey)
 		if data.valid && err != nil {
 			t.Errorf("[%v] Error while verifying key: %v", data.name, err)
@@ -76,14 +74,14 @@ func TestRSAPSSSign(t *testing.T) {
 
 	key, _ := ioutil.ReadFile("test/sample_key")
 	var rsaPSSKey *rsa.PrivateKey
-	if rsaPSSKey, err = jwt.ParseRSAPrivateKeyFromPEM(key); err != nil {
+	if rsaPSSKey, err = ParseRSAPrivateKeyFromPEM(key); err != nil {
 		t.Errorf("Unable to parse RSA private key: %v", err)
 	}
 
 	for _, data := range rsaPSSTestData {
 		if data.valid {
 			parts := strings.Split(data.tokenString, ".")
-			method := jwt.GetSigningMethod(data.alg)
+			method := GetSigningMethod(data.alg)
 			sig, err := method.Sign(strings.Join(parts[0:2], "."), rsaPSSKey)
 			if err != nil {
 				t.Errorf("[%v] Error signing token: %v", data.name, err)

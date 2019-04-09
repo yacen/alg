@@ -1,8 +1,7 @@
-package alg_test
+package alg
 
 import (
 	"fmt"
-	"github.com/yacen/alg"
 	"time"
 )
 
@@ -13,14 +12,13 @@ import (
 // See the CustomClaimsType example for intended usage.
 func ExampleNewWithClaims_standardClaims() {
 	mySigningKey := []byte("AllYourBase")
-
 	// Create the Claims
-	claims := &jwt.StandardClaims{
+	claims := &StandardClaims{
 		ExpiresAt: 15000,
 		Issuer:    "test",
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := NewWithClaims(SigningMethodHS256, claims)
 	ss, err := token.SignedString(mySigningKey)
 	fmt.Printf("%v %v", ss, err)
 	//Output: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE1MDAwLCJpc3MiOiJ0ZXN0In0.QsODzZu3lUZMVdhbO76u3Jv02iYCvEHcYVUI1kOWEU0 <nil>
@@ -33,19 +31,19 @@ func ExampleNewWithClaims_customClaimsType() {
 
 	type MyCustomClaims struct {
 		Foo string `json:"foo"`
-		jwt.StandardClaims
+		StandardClaims
 	}
 
 	// Create the Claims
 	claims := MyCustomClaims{
 		"bar",
-		jwt.StandardClaims{
+		StandardClaims{
 			ExpiresAt: 15000,
 			Issuer:    "test",
 		},
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	token := NewWithClaims(SigningMethodHS256, claims)
 	ss, err := token.SignedString(mySigningKey)
 	fmt.Printf("%v %v", ss, err)
 	//Output: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJleHAiOjE1MDAwLCJpc3MiOiJ0ZXN0In0.HE7fK0xOQwFEr4WDgRWj4teRPZ6i3GLwD5YCm6Pwu_c <nil>
@@ -58,12 +56,12 @@ func ExampleParseWithClaims_customClaimsType() {
 
 	type MyCustomClaims struct {
 		Foo string `json:"foo"`
-		jwt.StandardClaims
+		StandardClaims
 	}
 
 	// sample token is expired.  override time so it parses as valid
 	at(time.Unix(0, 0), func() {
-		token, err := jwt.ParseWithClaims(tokenString, &MyCustomClaims{}, func(token *jwt.Token) (interface{}, error) {
+		token, err := ParseWithClaims(tokenString, &MyCustomClaims{}, func(token *Token) (interface{}, error) {
 			return []byte("AllYourBase"), nil
 		})
 
@@ -79,11 +77,11 @@ func ExampleParseWithClaims_customClaimsType() {
 
 // Override time value for tests.  Restore default value after.
 func at(t time.Time, f func()) {
-	jwt.TimeFunc = func() time.Time {
+	TimeFunc = func() time.Time {
 		return t
 	}
 	f()
-	jwt.TimeFunc = time.Now
+	TimeFunc = time.Now
 }
 
 // An example of parsing the error types using bitfield checks
@@ -91,16 +89,16 @@ func ExampleParse_errorChecking() {
 	// Token from another example.  This token is expired
 	var tokenString = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmb28iOiJiYXIiLCJleHAiOjE1MDAwLCJpc3MiOiJ0ZXN0In0.HE7fK0xOQwFEr4WDgRWj4teRPZ6i3GLwD5YCm6Pwu_c"
 
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := Parse(tokenString, func(token *Token) (interface{}, error) {
 		return []byte("AllYourBase"), nil
 	})
 
 	if token.Valid {
 		fmt.Println("You look nice today")
-	} else if ve, ok := err.(*jwt.ValidationError); ok {
-		if ve.Errors&jwt.ValidationErrorMalformed != 0 {
+	} else if ve, ok := err.(*ValidationError); ok {
+		if ve.Errors&ValidationErrorMalformed != 0 {
 			fmt.Println("That's not even a token")
-		} else if ve.Errors&(jwt.ValidationErrorExpired|jwt.ValidationErrorNotValidYet) != 0 {
+		} else if ve.Errors&(ValidationErrorExpired|ValidationErrorNotValidYet) != 0 {
 			// Token is either expired or not active yet
 			fmt.Println("Timing is everything")
 		} else {

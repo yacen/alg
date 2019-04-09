@@ -1,8 +1,7 @@
-package alg_test
+package alg
 
 import (
 	"fmt"
-	"github.com/yacen/alg"
 	"io/ioutil"
 	"time"
 )
@@ -25,7 +24,7 @@ func init() {
 func ExampleNew_hmac() {
 	// Create a new token object, specifying signing method and the claims
 	// you would like it to contain.
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+	token := NewWithClaims(SigningMethodHS256, MapClaims{
 		"foo": "bar",
 		"nbf": time.Date(2015, 10, 10, 12, 0, 0, 0, time.UTC).Unix(),
 	})
@@ -46,17 +45,17 @@ func ExampleParse_hmac() {
 	// useful if you use multiple keys for your application.  The standard is to use 'kid' in the
 	// head of the token to identify which key to use, but the parsed token (head and claims) is provided
 	// to the callback, providing flexibility.
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+	token, err := Parse(tokenString, func(token *Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+		if _, ok := token.Method.(*SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("Unexpected signing method: %v", token.Header["alg"])
 		}
-		
+
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
 		return hmacSampleSecret, nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+	if claims, ok := token.Claims.(MapClaims); ok && token.Valid {
 		fmt.Println(claims["foo"], claims["nbf"])
 	} else {
 		fmt.Println(err)

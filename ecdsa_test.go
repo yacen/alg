@@ -1,12 +1,10 @@
-package alg_test
+package alg
 
 import (
 	"crypto/ecdsa"
 	"io/ioutil"
 	"strings"
 	"testing"
-
-	"github.com/yacen/alg"
 )
 
 var ecdsaTestData = []struct {
@@ -58,13 +56,12 @@ func TestECDSAVerify(t *testing.T) {
 		key, _ := ioutil.ReadFile(data.keys["public"])
 
 		var ecdsaKey *ecdsa.PublicKey
-		if ecdsaKey, err = jwt.ParseECPublicKeyFromPEM(key); err != nil {
+		if ecdsaKey, err = ParseECPublicKeyFromPEM(key); err != nil {
 			t.Errorf("Unable to parse ECDSA public key: %v", err)
 		}
 
 		parts := strings.Split(data.tokenString, ".")
-
-		method := jwt.GetSigningMethod(data.alg)
+		method := GetSigningMethod(data.alg)
 		err = method.Verify(strings.Join(parts[0:2], "."), parts[2], ecdsaKey)
 		if data.valid && err != nil {
 			t.Errorf("[%v] Error while verifying key: %v", data.name, err)
@@ -81,13 +78,13 @@ func TestECDSASign(t *testing.T) {
 		key, _ := ioutil.ReadFile(data.keys["private"])
 
 		var ecdsaKey *ecdsa.PrivateKey
-		if ecdsaKey, err = jwt.ParseECPrivateKeyFromPEM(key); err != nil {
+		if ecdsaKey, err = ParseECPrivateKeyFromPEM(key); err != nil {
 			t.Errorf("Unable to parse ECDSA private key: %v", err)
 		}
 
 		if data.valid {
 			parts := strings.Split(data.tokenString, ".")
-			method := jwt.GetSigningMethod(data.alg)
+			method := GetSigningMethod(data.alg)
 			sig, err := method.Sign(strings.Join(parts[0:2], "."), ecdsaKey)
 			if err != nil {
 				t.Errorf("[%v] Error signing token: %v", data.name, err)

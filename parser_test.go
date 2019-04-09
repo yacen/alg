@@ -1,25 +1,23 @@
-package alg_test
+package alg
 
 import (
 	"crypto/rsa"
 	"encoding/json"
 	"fmt"
+	"github.com/yacen/alg/test"
 	"reflect"
 	"testing"
 	"time"
-
-	"github.com/yacen/alg"
-	"github.com/yacen/alg/test"
 )
 
 var keyFuncError error = fmt.Errorf("error loading key")
 
 var (
 	jwtTestDefaultKey *rsa.PublicKey
-	defaultKeyFunc    jwt.Keyfunc = func(t *jwt.Token) (interface{}, error) { return jwtTestDefaultKey, nil }
-	emptyKeyFunc      jwt.Keyfunc = func(t *jwt.Token) (interface{}, error) { return nil, nil }
-	errorKeyFunc      jwt.Keyfunc = func(t *jwt.Token) (interface{}, error) { return nil, keyFuncError }
-	nilKeyFunc        jwt.Keyfunc = nil
+	defaultKeyFunc    Keyfunc = func(t *Token) (interface{}, error) { return jwtTestDefaultKey, nil }
+	emptyKeyFunc      Keyfunc = func(t *Token) (interface{}, error) { return nil, nil }
+	errorKeyFunc      Keyfunc = func(t *Token) (interface{}, error) { return nil, keyFuncError }
+	nilKeyFunc        Keyfunc = nil
 )
 
 func init() {
@@ -29,17 +27,17 @@ func init() {
 var jwtTestData = []struct {
 	name        string
 	tokenString string
-	keyfunc     jwt.Keyfunc
-	claims      jwt.Claims
+	keyfunc     Keyfunc
+	claims      Claims
 	valid       bool
 	errors      uint32
-	parser      *jwt.Parser
+	parser      *Parser
 }{
 	{
 		"basic",
 		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		true,
 		0,
 		nil,
@@ -48,138 +46,138 @@ var jwtTestData = []struct {
 		"basic expired",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
+		MapClaims{"foo": "bar", "exp": float64(time.Now().Unix() - 100)},
 		false,
-		jwt.ValidationErrorExpired,
+		ValidationErrorExpired,
 		nil,
 	},
 	{
 		"basic nbf",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
+		MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100)},
 		false,
-		jwt.ValidationErrorNotValidYet,
+		ValidationErrorNotValidYet,
 		nil,
 	},
 	{
 		"expired and nbf",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
+		MapClaims{"foo": "bar", "nbf": float64(time.Now().Unix() + 100), "exp": float64(time.Now().Unix() - 100)},
 		false,
-		jwt.ValidationErrorNotValidYet | jwt.ValidationErrorExpired,
+		ValidationErrorNotValidYet | ValidationErrorExpired,
 		nil,
 	},
 	{
 		"basic invalid",
 		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.EhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		false,
-		jwt.ValidationErrorSignatureInvalid,
+		ValidationErrorSignatureInvalid,
 		nil,
 	},
 	{
 		"basic nokeyfunc",
 		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
 		nilKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		false,
-		jwt.ValidationErrorUnverifiable,
+		ValidationErrorUnverifiable,
 		nil,
 	},
 	{
 		"basic nokey",
 		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
 		emptyKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		false,
-		jwt.ValidationErrorSignatureInvalid,
+		ValidationErrorSignatureInvalid,
 		nil,
 	},
 	{
 		"basic errorkey",
 		"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJmb28iOiJiYXIifQ.FhkiHkoESI_cG3NPigFrxEk9Z60_oXrOT2vGm9Pn6RDgYNovYORQmmA0zs1AoAOf09ly2Nx2YAg6ABqAYga1AcMFkJljwxTT5fYphTuqpWdy4BELeSYJx5Ty2gmr8e7RonuUztrdD5WfPqLKMm1Ozp_T6zALpRmwTIW0QPnaBXaQD90FplAg46Iy1UlDKr-Eupy0i5SLch5Q-p2ZpaL_5fnTIUDlxC3pWhJTyx_71qDI-mAA_5lE_VdroOeflG56sSmDxopPEG3bFlSu1eowyBfxtu0_CuVd-M42RU75Zc4Gsj6uV77MBtbMrf4_7M_NUTSgoIF3fRqxrj0NzihIBg",
 		errorKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		false,
-		jwt.ValidationErrorUnverifiable,
+		ValidationErrorUnverifiable,
 		nil,
 	},
 	{
 		"invalid signing method",
 		"",
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		false,
-		jwt.ValidationErrorSignatureInvalid,
-		&jwt.Parser{ValidMethods: []string{"HS256"}},
+		ValidationErrorSignatureInvalid,
+		&Parser{ValidMethods: []string{"HS256"}},
 	},
 	{
 		"valid signing method",
 		"",
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar"},
+		MapClaims{"foo": "bar"},
 		true,
 		0,
-		&jwt.Parser{ValidMethods: []string{"RS256", "HS256"}},
+		&Parser{ValidMethods: []string{"RS256", "HS256"}},
 	},
 	{
 		"JSON Number",
 		"",
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": json.Number("123.4")},
+		MapClaims{"foo": json.Number("123.4")},
 		true,
 		0,
-		&jwt.Parser{UseJSONNumber: true},
+		&Parser{UseJSONNumber: true},
 	},
 	{
 		"Standard Claims",
 		"",
 		defaultKeyFunc,
-		&jwt.StandardClaims{
+		&StandardClaims{
 			ExpiresAt: time.Now().Add(time.Second * 10).Unix(),
 		},
 		true,
 		0,
-		&jwt.Parser{UseJSONNumber: true},
+		&Parser{UseJSONNumber: true},
 	},
 	{
 		"JSON Number - basic expired",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "exp": json.Number(fmt.Sprintf("%v", time.Now().Unix()-100))},
+		MapClaims{"foo": "bar", "exp": json.Number(fmt.Sprintf("%v", time.Now().Unix()-100))},
 		false,
-		jwt.ValidationErrorExpired,
-		&jwt.Parser{UseJSONNumber: true},
+		ValidationErrorExpired,
+		&Parser{UseJSONNumber: true},
 	},
 	{
 		"JSON Number - basic nbf",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "nbf": json.Number(fmt.Sprintf("%v", time.Now().Unix()+100))},
+		MapClaims{"foo": "bar", "nbf": json.Number(fmt.Sprintf("%v", time.Now().Unix()+100))},
 		false,
-		jwt.ValidationErrorNotValidYet,
-		&jwt.Parser{UseJSONNumber: true},
+		ValidationErrorNotValidYet,
+		&Parser{UseJSONNumber: true},
 	},
 	{
 		"JSON Number - expired and nbf",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "nbf": json.Number(fmt.Sprintf("%v", time.Now().Unix()+100)), "exp": json.Number(fmt.Sprintf("%v", time.Now().Unix()-100))},
+		MapClaims{"foo": "bar", "nbf": json.Number(fmt.Sprintf("%v", time.Now().Unix()+100)), "exp": json.Number(fmt.Sprintf("%v", time.Now().Unix()-100))},
 		false,
-		jwt.ValidationErrorNotValidYet | jwt.ValidationErrorExpired,
-		&jwt.Parser{UseJSONNumber: true},
+		ValidationErrorNotValidYet | ValidationErrorExpired,
+		&Parser{UseJSONNumber: true},
 	},
 	{
 		"SkipClaimsValidation during token parsing",
 		"", // autogen
 		defaultKeyFunc,
-		jwt.MapClaims{"foo": "bar", "nbf": json.Number(fmt.Sprintf("%v", time.Now().Unix()+100))},
+		MapClaims{"foo": "bar", "nbf": json.Number(fmt.Sprintf("%v", time.Now().Unix()+100))},
 		true,
 		0,
-		&jwt.Parser{UseJSONNumber: true, SkipClaimsValidation: true},
+		&Parser{UseJSONNumber: true, SkipClaimsValidation: true},
 	},
 }
 
@@ -194,18 +192,18 @@ func TestParser_Parse(t *testing.T) {
 		}
 
 		// Parse the token
-		var token *jwt.Token
+		var token *Token
 		var err error
 		var parser = data.parser
 		if parser == nil {
-			parser = new(jwt.Parser)
+			parser = new(Parser)
 		}
 		// Figure out correct claims type
 		switch data.claims.(type) {
-		case jwt.MapClaims:
-			token, err = parser.ParseWithClaims(data.tokenString, jwt.MapClaims{}, data.keyfunc)
-		case *jwt.StandardClaims:
-			token, err = parser.ParseWithClaims(data.tokenString, &jwt.StandardClaims{}, data.keyfunc)
+		case MapClaims:
+			token, err = parser.ParseWithClaims(data.tokenString, MapClaims{}, data.keyfunc)
+		case *StandardClaims:
+			token, err = parser.ParseWithClaims(data.tokenString, &StandardClaims{}, data.keyfunc)
 		}
 
 		// Verify result matches expectation
@@ -230,7 +228,7 @@ func TestParser_Parse(t *testing.T) {
 				t.Errorf("[%v] Expecting error.  Didn't get one.", data.name)
 			} else {
 
-				ve := err.(*jwt.ValidationError)
+				ve := err.(*ValidationError)
 				// compare the bitfield part of the error
 				if e := ve.Errors; e != data.errors {
 					t.Errorf("[%v] Errors don't match expectation.  %v != %v", data.name, e, data.errors)
@@ -258,18 +256,18 @@ func TestParser_ParseUnverified(t *testing.T) {
 		}
 
 		// Parse the token
-		var token *jwt.Token
+		var token *Token
 		var err error
 		var parser = data.parser
 		if parser == nil {
-			parser = new(jwt.Parser)
+			parser = new(Parser)
 		}
 		// Figure out correct claims type
 		switch data.claims.(type) {
-		case jwt.MapClaims:
-			token, _, err = parser.ParseUnverified(data.tokenString, jwt.MapClaims{})
-		case *jwt.StandardClaims:
-			token, _, err = parser.ParseUnverified(data.tokenString, &jwt.StandardClaims{})
+		case MapClaims:
+			token, _, err = parser.ParseUnverified(data.tokenString, MapClaims{})
+		case *StandardClaims:
+			token, _, err = parser.ParseUnverified(data.tokenString, &StandardClaims{})
 		}
 
 		if err != nil {
@@ -288,8 +286,8 @@ func TestParser_ParseUnverified(t *testing.T) {
 }
 
 // Helper method for benchmarking various methods
-func benchmarkSigning(b *testing.B, method jwt.SigningMethod, key interface{}) {
-	t := jwt.New(method)
+func benchmarkSigning(b *testing.B, method SigningMethod, key interface{}) {
+	t := New(method)
 	b.RunParallel(func(pb *testing.PB) {
 		for pb.Next() {
 			if _, err := t.SignedString(key); err != nil {

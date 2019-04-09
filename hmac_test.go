@@ -1,7 +1,7 @@
-package alg_test
+package alg
 
 import (
-	"github.com/yacen/alg"
+	"github.com/dgrijalva/jwt-go"
 	"io/ioutil"
 	"strings"
 	"testing"
