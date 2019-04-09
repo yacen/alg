@@ -1,4 +1,4 @@
-package jwt
+package alg
 
 import (
 	"encoding/json"

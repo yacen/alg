@@ -1,6 +1,6 @@
 // +build go1.4
 
-package jwt
+package alg
 
 import (
 	"crypto"

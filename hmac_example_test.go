@@ -1,8 +1,8 @@
-package jwt_test
+package alg_test
 
 import (
 	"fmt"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/yacen/alg"
 	"io/ioutil"
 	"time"
 )

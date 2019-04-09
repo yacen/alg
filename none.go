@@ -1,4 +1,4 @@
-package jwt
+package alg
 
 // Implements the none signing method.  This is required by the spec
 // but you probably should never use it.

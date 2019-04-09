@@ -56,7 +56,7 @@ This will likely be the last backwards compatible release before 3.0.0, excludin
 * Added new type, Parser, to allow for configuration of various parsing parameters
 	* You can now specify a list of valid signing methods.  Anything outside this set will be rejected.
 	* You can now opt to use the `json.Number` type instead of `float64` when parsing token JSON
-* Added support for [Travis CI](https://travis-ci.org/dgrijalva/jwt-go)
+* Added support for [Travis CI](https://travis-ci.org/yacen/alg)
 * Fixed some bugs with ECDSA parsing
 
 #### 2.3.0

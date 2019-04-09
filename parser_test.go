@@ -1,4 +1,4 @@
-package jwt_test
+package alg_test
 
 import (
 	"crypto/rsa"
@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
-	"github.com/dgrijalva/jwt-go/test"
+	"github.com/yacen/alg"
+	"github.com/yacen/alg/test"
 )
 
 var keyFuncError error = fmt.Errorf("error loading key")

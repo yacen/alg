@@ -1,4 +1,4 @@
-package jwt_test
+package alg_test
 
 import (
 	"crypto/ecdsa"
@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/yacen/alg"
 )
 
 var ecdsaTestData = []struct {
