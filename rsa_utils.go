@@ -5,12 +5,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"io/ioutil"
 )
 
 var (
-	ErrKeyMustBePEMEncoded = errors.New("Invalid Key: Key must be PEM encoded PKCS1 or PKCS8 private key")
-	ErrNotRSAPrivateKey    = errors.New("Key is not a valid RSA private key")
-	ErrNotRSAPublicKey     = errors.New("Key is not a valid RSA public key")
+	ErrNotRSAPrivateKey = errors.New("Key is not a valid RSA private key")
+	ErrNotRSAPublicKey  = errors.New("Key is not a valid RSA public key")
 )
 
 // Parse PEM encoded PKCS1 or PKCS8 private key
@@ -98,4 +98,28 @@ func ParseRSAPublicKeyFromPEM(key []byte) (*rsa.PublicKey, error) {
 	}
 
 	return pkey, nil
+}
+
+func LoadRSAPrivateKeyFromDisk(location string) *rsa.PrivateKey {
+	keyData, e := ioutil.ReadFile(location)
+	if e != nil {
+		panic(e.Error())
+	}
+	key, e := ParseRSAPrivateKeyFromPEM(keyData)
+	if e != nil {
+		panic(e.Error())
+	}
+	return key
+}
+
+func LoadRSAPublicKeyFromDisk(location string) *rsa.PublicKey {
+	keyData, e := ioutil.ReadFile(location)
+	if e != nil {
+		panic(e.Error())
+	}
+	key, e := ParseRSAPublicKeyFromPEM(keyData)
+	if e != nil {
+		panic(e.Error())
+	}
+	return key
 }
