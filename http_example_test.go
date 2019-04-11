@@ -114,30 +114,6 @@ func Example_getTokenViaHTTP() {
 	//Output: test
 }
 
-func Example_useTokenViaHTTP() {
-
-	// Make a sample token
-	// In a real world situation, this token will have been acquired from
-	// some other API call (see Example_getTokenViaHTTP)
-	token, err := createToken("foo")
-	fatal(err)
-
-	// Make request.  See func restrictedHandler for example request processor
-	req, err := http.NewRequest("GET", fmt.Sprintf("http://localhost:%v/restricted", serverPort), nil)
-	fatal(err)
-	req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
-	res, err := http.DefaultClient.Do(req)
-	fatal(err)
-
-	// Read the response body
-	buf := new(bytes.Buffer)
-	io.Copy(buf, res.Body)
-	res.Body.Close()
-	fmt.Println(buf.String())
-
-	// Output: Welcome, foo
-}
-
 func createToken(user string) (string, error) {
 	// create a signer for rsa 256
 	t := New(GetSigningMethod("RS256"))
